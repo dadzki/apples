@@ -1,0 +1,59 @@
+version: '3'
+services:
+  mysql:
+    image: mysql:latest
+    volumes:
+      - "./docker/db:/var/lib/mysql"
+    restart: always
+    ports:
+      - 33061:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: apple_db
+      MYSQL_USER: apple_user
+      MYSQL_PASSWORD: secret
+
+  php-fpm:
+    build:
+      context: ./docker/php-fpm
+    expose:
+      - 9000
+    links:
+      - mysql
+    volumes:
+      - ./:/app
+      - ./docker/php-fpm/php.ini:/usr/local/etc/php/conf.d/php.ini
+
+  php-cli:
+    build:
+      context: ./docker/php-cli
+    links:
+      - mysql
+    volumes:
+      - ./:/app
+      - composer:/root/.composer/cache
+
+  nginx-backend:
+    build:
+      context: ./docker/nginx-backend
+    links:
+      - php-fpm
+    volumes:
+      - ./:/app
+    ports:
+      - 8012:8002
+
+
+  nginx-frontend:
+    build:
+      context: ./docker/nginx-frontend
+    depends_on:
+      - php-fpm
+    volumes:
+      - ./:/app
+      - ./backend/web/upload:/app/frontend/web/upload
+    ports:
+      - 8011:8001
+
+volumes:
+  composer:
