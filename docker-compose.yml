@@ -1,6 +1,6 @@
 version: '3'
 services:
-  mysql:
+  db_mysql:
     image: mysql:latest
     volumes:
       - "./docker/db:/var/lib/mysql"
@@ -19,7 +19,7 @@ services:
     expose:
       - 9000
     links:
-      - mysql
+      - db_mysql
     volumes:
       - ./:/app
       - ./docker/php-fpm/php.ini:/usr/local/etc/php/conf.d/php.ini
@@ -27,8 +27,8 @@ services:
   php-cli:
     build:
       context: ./docker/php-cli
-    links:
-      - mysql
+    depends_on:
+      - db_mysql
     volumes:
       - ./:/app
       - composer:/root/.composer/cache
