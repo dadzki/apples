@@ -2,7 +2,7 @@
 
 namespace frontend\forms;
 
-use common\entities\User;
+use apple\entities\User;
 use yii\base\InvalidArgumentException;
 use yii\base\Model;
 
