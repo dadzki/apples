@@ -6,7 +6,7 @@ use yii\bootstrap\ActiveForm;
 
 /* @var $this yii\web\View */
 /* @var $form yii\bootstrap\ActiveForm */
-/* @var $model \apple\forms\auth\LoginForm; */
+/* @var $model \apple\forms\LoginForm; */
 
 $this->title = 'Sign In';
 

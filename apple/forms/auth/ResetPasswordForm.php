@@ -1,7 +1,9 @@
 <?php
 namespace apple\forms\auth;
 
+use yii\base\InvalidArgumentException;
 use yii\base\Model;
+use apple\entities\User;
 
 /**
  * Password reset form
@@ -17,7 +19,7 @@ class ResetPasswordForm extends Model
     {
         return [
             ['password', 'required'],
-            ['password', 'string', 'min' => Yii::$app->params['user.passwordMinLength']],
+            ['password', 'string', 'min' => 6],
         ];
     }
 }

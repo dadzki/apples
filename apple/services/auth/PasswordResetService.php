@@ -3,63 +3,98 @@
 
 namespace apple\services\auth;
 
+use apple\entities\User;
 use apple\forms\auth\PasswordResetRequestForm;
 use apple\forms\auth\ResetPasswordForm;
+use apple\repositories\UserRepository;
 use Yii;
 use yii\mail\MailerInterface;
-use apple\repositories\UserRepository;
 
 class PasswordResetService
 {
-    private $mailer;
-    private $users;
+    /**
+     * @var MailerInterface
+     */
+    protected $mailer;
 
-    public function __construct(UserRepository $users, MailerInterface $mailer)
+    protected $users;
+
+    /**
+     * PasswordResetService constructor.
+     * @param MailerInterface $mailer
+     * @param UserRepository $users
+     */
+    public function __construct(MailerInterface $mailer, UserRepository $users)
     {
         $this->mailer = $mailer;
         $this->users = $users;
     }
 
-    public function request(PasswordResetRequestForm $form): void
+    /**
+     * @param PasswordResetRequestForm $form
+     */
+    public function sendRequest(PasswordResetRequestForm $form): void
     {
-        $user = $this->users->getByEmail($form->email);
+        /* @var $user User */
+        $user = $this->users->findByEmail($form->email);
 
-        if (!$user->isActive()) {
-            throw new \DomainException('User is not active.');
+        if (!$user) {
+            throw new \DomainException('Пользователь не найден');
         }
 
-        $user->requestPasswordReset();
+        if (!$this->users->isPasswordResetTokenValid($user->password_reset_token)) {
+            $user->generatePasswordResetToken();
+            if (!$user->save()) {
+                throw new \RuntimeException('Ошибка сохранения пользователя');
+            }
+        }
 
-        $this->users->save($user);
-
-        $sent = $this->mailer
+        $sentResult = $this->mailer
             ->compose(
-                ['html' => 'auth/reset/confirm-html', 'text' => 'auth/reset/confirm-text'],
+                ['html' => 'passwordResetToken-html', 'text' => 'passwordResetToken-text'],
                 ['user' => $user]
             )
-            ->setTo($user->email)
+            ->setTo($form->email)
             ->setSubject('Password reset for ' . Yii::$app->name)
             ->send();
 
-        if (!$sent) {
-            throw new \RuntimeException('Sending error.');
+        if (!$sentResult) {
+            throw new \RuntimeException('Ошибка отправки запроса пользователю по смене пароля');
         }
     }
+
+    /**
+     * Resets password.
+     *
+     * @param string $token
+     * @param ResetPasswordForm $form
+     * @return void if password was reset.
+     */
+    public function resetPassword(string $token, ResetPasswordForm $form): void
+    {
+        $user = $this->users->findByPasswordResetToken($token);
+
+        if (!$user) {
+            throw new \DomainException('Пользователь не найден');
+        }
+
+        $user->setPassword($form->password);
+        $user->removePasswordResetToken();
+
+        if (!$user->save(false)) {
+            throw new \RuntimeException('Ошибка сохранения пользователя');
+        }
+    }
+
 
     public function validateToken($token): void
     {
         if (empty($token) || !is_string($token)) {
             throw new \DomainException('Password reset token cannot be blank.');
         }
-        if (!$this->users->existsByPasswordResetToken($token)) {
+
+        if (!$this->users->findByPasswordResetToken($token)) {
             throw new \DomainException('Wrong password reset token.');
         }
-    }
-
-    public function reset(string $token, ResetPasswordForm $form): void
-    {
-        $user = $this->users->getByPasswordResetToken($token);
-        $user->resetPassword($form->password);
-        $this->users->save($user);
     }
 }

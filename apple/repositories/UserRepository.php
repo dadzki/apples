@@ -4,46 +4,105 @@
 namespace apple\repositories;
 
 use apple\entities\User;
+use Yii;
 
 class UserRepository
 {
-    public function getByEmailConfirmToken($token): User
+    /**
+     * Finds user by password reset token
+     *
+     * @param string $token password reset token
+     * @return static|null
+     */
+    public static function findByPasswordResetToken($token)
     {
-        return $this->getBy(['email_confirm_token' => $token]);
+        if (!static::isPasswordResetTokenValid($token)) {
+            return null;
+        }
+
+        return User::findOne([
+            'password_reset_token' => $token,
+            'status' => User::STATUS_ACTIVE,
+        ]);
     }
 
-    public function getByEmail($email): User
+    /**
+     * Finds out if password reset token is valid
+     *
+     * @param string $token password reset token
+     * @return bool
+     */
+    public static function isPasswordResetTokenValid($token): bool
     {
-        return $this->getBy(['email' => $email]);
+        if (empty($token)) {
+            return false;
+        }
+
+        $timestamp = (int) substr($token, strrpos($token, '_') + 1);
+        $expire = Yii::$app->params['user.passwordResetTokenExpire'];
+        return $timestamp + $expire >= time();
     }
 
-    public function getByPasswordResetToken($token): User
+    /**
+     * Finds user by verification email token
+     *
+     * @param string $token verify email token
+     * @return static|null
+     */
+    public static function findByVerificationToken($token): User
     {
-        return $this->getBy(['password_reset_token' => $token]);
+        return User::findOne([
+            'verification_token' => $token,
+            'status' => User::STATUS_INACTIVE
+        ]);
     }
 
-    public function existsByPasswordResetToken(string $token): bool
+    /**
+     * Finds user by username
+     *
+     * @param string $username
+     * @return static|null
+     */
+    public static function findByUsername($username)
     {
-        return (bool) User::findByPasswordResetToken($token);
+        return User::findOne(['username' => $username, 'status' => User::STATUS_ACTIVE]);
     }
+
+    public static function findByEmail($email)
+    {
+        return User::findOne(['email' => $email, 'status' => User::STATUS_ACTIVE]);
+    }
+
+    public static function findByEmailInactive($email)
+    {
+        return User::findOne(['email' => $email, 'status' => User::STATUS_INACTIVE]);
+    }
+
 
     public function findByUsernameOrEmail($value): ?User
     {
         return User::find()->andWhere(['or', ['username' => $value], ['email' => $value]])->one();
     }
 
-    public function save(User $user): void
+    public function findByNetworkIdentity($network, $identity): ?User
     {
-        if (!$user->save()) {
-            throw new \RuntimeException('Saving error.');
+        return User::find()
+            ->joinWith('networks n')
+            ->andWhere(['n.network' => $network, 'n.identity' => $identity])
+            ->one();
+    }
+
+    public function getById($id): User
+    {
+        return User::findOne(['id' => $id]);
+    }
+
+
+    public function remove(User $user): void
+    {
+        if (!$user->delete()) {
+            throw new \RuntimeException('Ошибка удаления.');
         }
     }
 
-    private function getBy(array $condition): User
-    {
-        if (!$user = User::find()->andWhere($condition)->limit(1)->one()) {
-            throw new NotFoundException('User not found.');
-        }
-        return $user;
-    }
 }

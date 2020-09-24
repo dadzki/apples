@@ -3,29 +3,47 @@
 namespace apple\services;
 
 use apple\forms\ContactForm;
+use Yii;
 use yii\mail\MailerInterface;
 
 class ContactService
 {
-    private $adminEmail;
+    protected $adminEmail;
+
+    /**
+     * @var MailerInterface
+     */
     private $mailer;
 
+    /**
+     * ContactService constructor.
+     * @param $adminEmail
+     * @param MailerInterface $mailer
+     */
     public function __construct($adminEmail, MailerInterface $mailer)
     {
         $this->adminEmail = $adminEmail;
         $this->mailer = $mailer;
     }
 
+
+    /**
+     * Sends an email to the specified email address using the information collected by this model.
+     *
+     * @param ContactForm $form
+     * @return void whether the email was sent
+     */
     public function send(ContactForm $form): void
     {
-        $sent = $this->mailer->compose()
+        $sentResult =  $this->mailer->compose()
             ->setTo($this->adminEmail)
+            ->setReplyTo([$form->email => $form->name])
             ->setSubject($form->subject)
             ->setTextBody($form->body)
             ->send();
 
-        if (!$sent) {
-            throw new \RuntimeException('Sending error.');
+        if (!$sentResult) {
+            throw new \RuntimeException('Ошибка отправки сообщения');
         }
     }
 }

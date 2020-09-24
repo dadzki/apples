@@ -16,6 +16,7 @@ $this->title = $name;
 
         <div class="error-content">
             <h3><?= $name ?></h3>
+
             <p>
                 <?= nl2br(Html::encode($message)) ?>
             </p>

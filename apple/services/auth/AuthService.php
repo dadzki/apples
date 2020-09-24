@@ -3,16 +3,29 @@
 
 namespace apple\services\auth;
 
+
+use apple\forms\LoginForm;
 use apple\entities\User;
-use apple\forms\auth\LoginForm;
 use apple\repositories\UserRepository;
+use yii\mail\MailerInterface;
 
 class AuthService
 {
-    private $users;
+    /**
+     * @var MailerInterface
+     */
+    private $mailer;
 
-    public function __construct(UserRepository $users)
+    protected $users;
+
+    /**
+     * ContactService constructor.
+     * @param MailerInterface $mailer
+     * @param UserRepository $users
+     */
+    public function __construct(MailerInterface $mailer, UserRepository $users)
     {
+        $this->mailer = $mailer;
         $this->users = $users;
     }
 

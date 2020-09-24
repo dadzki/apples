@@ -5,7 +5,7 @@ use apple\services\auth\AuthService;
 use Yii;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
-use apple\forms\auth\LoginForm;
+use apple\forms\LoginForm;
 
 class AuthController extends Controller
 {

@@ -30,12 +30,39 @@ class User extends ActiveRecord implements IdentityInterface
     const STATUS_ACTIVE = 10;
 
     /**
-     * User constructor.
      * @param string $username
      * @param string $email
      * @param string $password
+     * @return User
+     * @throws \yii\base\Exception
      */
-    public static function requestSignup(string $username, string $email, string $password): self
+    public static function create(string $username, string $email, string $password): self
+    {
+        $user = new User();
+        $user->username = $username;
+        $user->email = $email;
+        $user->setPassword(!empty($password) ? $password : Yii::$app->security->generateRandomString());
+        $user->created_at = time();
+        $user->status = self::STATUS_ACTIVE;
+        $user->generateAuthKey();
+
+        return $user;
+    }
+
+    public function edit(string $username, string $email): void
+    {
+        $this->username = $username;
+        $this->email = $email;
+        $this->updated_at = time();
+    }
+
+    /**
+     * @param string $username
+     * @param string $email
+     * @param string $password
+     * @return User
+     */
+    public static function signUp(string $username, string $email, string $password): self
     {
         $user = new User();
         $user->username = $username;
@@ -43,45 +70,10 @@ class User extends ActiveRecord implements IdentityInterface
         $user->setPassword($password);
         $user->created_at = time();
         $user->status = self::STATUS_INACTIVE;
-        $user->email_confirm_token = Yii::$app->security->generateRandomString();
         $user->generateAuthKey();
+        $user->generateEmailVerificationToken();
+
         return $user;
-    }
-
-    public function confirmSignup(): void
-    {
-        if (!$this->isWait()) {
-            throw new \DomainException('User is already active.');
-        }
-        $this->status = self::STATUS_ACTIVE;
-        $this->email_confirm_token = null;
-    }
-
-    public function isActive(): bool
-    {
-        return $this->status === self::STATUS_ACTIVE;
-    }
-
-    public function isWait(): bool
-    {
-        return $this->status === self::STATUS_INACTIVE;
-    }
-
-    public function requestPasswordReset(): void
-    {
-        if (!empty($this->password_reset_token) && self::isPasswordResetTokenValid($this->password_reset_token)) {
-            throw new \DomainException('Password resetting is already requested.');
-        }
-        $this->password_reset_token = Yii::$app->security->generateRandomString() . '_' . time();
-    }
-
-    public function resetPassword($password): void
-    {
-        if (empty($this->password_reset_token)) {
-            throw new \DomainException('Password resetting is not requested.');
-        }
-        $this->setPassword($password);
-        $this->password_reset_token = null;
     }
 
 
@@ -141,53 +133,6 @@ class User extends ActiveRecord implements IdentityInterface
         return static::findOne(['username' => $username, 'status' => self::STATUS_ACTIVE]);
     }
 
-    /**
-     * Finds user by password reset token
-     *
-     * @param string $token password reset token
-     * @return static|null
-     */
-    public static function findByPasswordResetToken($token)
-    {
-        if (!static::isPasswordResetTokenValid($token)) {
-            return null;
-        }
-
-        return static::findOne([
-            'password_reset_token' => $token,
-            'status' => self::STATUS_ACTIVE,
-        ]);
-    }
-
-    /**
-     * Finds user by verification email token
-     *
-     * @param string $token verify email token
-     * @return static|null
-     */
-    public static function findByVerificationToken($token) {
-        return static::findOne([
-            'verification_token' => $token,
-            'status' => self::STATUS_INACTIVE
-        ]);
-    }
-
-    /**
-     * Finds out if password reset token is valid
-     *
-     * @param string $token password reset token
-     * @return bool
-     */
-    public static function isPasswordResetTokenValid($token)
-    {
-        if (empty($token)) {
-            return false;
-        }
-
-        $timestamp = (int) substr($token, strrpos($token, '_') + 1);
-        $expire = Yii::$app->params['user.passwordResetTokenExpire'];
-        return $timestamp + $expire >= time();
-    }
 
     /**
      * {@inheritdoc}
@@ -229,7 +174,7 @@ class User extends ActiveRecord implements IdentityInterface
      *
      * @param string $password
      */
-    private function setPassword($password)
+    public function setPassword($password)
     {
         $this->password_hash = Yii::$app->security->generatePasswordHash($password);
     }
@@ -237,7 +182,7 @@ class User extends ActiveRecord implements IdentityInterface
     /**
      * Generates "remember me" authentication key
      */
-    private function generateAuthKey()
+    public function generateAuthKey()
     {
         $this->auth_key = Yii::$app->security->generateRandomString();
     }
@@ -245,16 +190,39 @@ class User extends ActiveRecord implements IdentityInterface
     /**
      * Generates new password reset token
      */
-    private function generateEmailConfirmToken()
+    public function generatePasswordResetToken()
     {
-        $this->email_confirm_token = Yii::$app->security->generateRandomString();
+        $this->password_reset_token = Yii::$app->security->generateRandomString() . '_' . time();
+    }
+
+    public function generateEmailVerificationToken()
+    {
+        $this->verification_token = Yii::$app->security->generateRandomString() . '_' . time();
     }
 
     /**
-     * Removes email confirm token
+     * Removes password reset token
      */
-    private function removeEmailConfirmToken()
+    public function removePasswordResetToken()
     {
-        $this->email_confirm_token = null;
+        $this->password_reset_token = null;
+    }
+
+    /**
+     * Ожидание активации email пользователя
+     * @return bool
+     */
+    public function isInActive()
+    {
+        return $this->status === self::STATUS_INACTIVE;
+    }
+
+    /**
+     * Активность пользователя
+     * @return bool
+     */
+    public function isActive()
+    {
+        return $this->status === self::STATUS_ACTIVE;
     }
 }

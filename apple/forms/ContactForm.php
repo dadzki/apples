@@ -5,6 +5,9 @@ namespace apple\forms;
 use Yii;
 use yii\base\Model;
 
+/**
+ * ContactForm is the model behind the contact form.
+ */
 class ContactForm extends Model
 {
     public $name;
@@ -20,8 +23,11 @@ class ContactForm extends Model
     public function rules()
     {
         return [
+            // name, email, subject and body are required
             [['name', 'email', 'subject', 'body'], 'required'],
+            // email has to be a valid email address
             ['email', 'email'],
+            // verifyCode needs to be entered correctly
             ['verifyCode', 'captcha'],
         ];
     }
@@ -35,5 +41,4 @@ class ContactForm extends Model
             'verifyCode' => 'Verification Code',
         ];
     }
-
 }

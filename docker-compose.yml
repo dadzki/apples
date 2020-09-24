@@ -1,12 +1,12 @@
 version: '3'
 services:
   db_mysql:
-    image: mysql:latest
+    image: mysql:5.7
     volumes:
-      - "./docker/db:/var/lib/mysql"
+      - "./docker/db-dev:/var/lib/mysql"
     restart: always
     ports:
-      - 33061:3306
+      - 33062:3306
     environment:
       MYSQL_ROOT_PASSWORD: secret
       MYSQL_DATABASE: apple_db
@@ -23,19 +23,20 @@ services:
     volumes:
       - ./:/app
       - ./docker/php-fpm/php.ini:/usr/local/etc/php/conf.d/php.ini
-
-  php-cli:
-    build:
-      context: ./docker/php-cli
-    depends_on:
-      - db_mysql
-    volumes:
-      - ./:/app
       - composer:/root/.composer/cache
+
+#  php-cli:
+#    build:
+#      context: docker/1/php-cli
+#    depends_on:
+#      - db_mysql
+#    volumes:
+#      - ./:/app
+#      - composer:/root/.composer/cache
 
   nginx-backend:
     build:
-      context: ./docker/nginx-backend
+      context: docker/nginx-backend
     links:
       - php-fpm
     volumes:
@@ -46,7 +47,7 @@ services:
 
   nginx-frontend:
     build:
-      context: ./docker/nginx-frontend
+      context: docker/nginx-frontend
     depends_on:
       - php-fpm
     volumes:

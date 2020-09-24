@@ -5,7 +5,7 @@ namespace frontend\controllers\auth;
 use apple\services\auth\AuthService;
 use Yii;
 use yii\web\Controller;
-use apple\forms\auth\LoginForm;
+use apple\forms\LoginForm;
 
 class AuthController extends Controller
 {

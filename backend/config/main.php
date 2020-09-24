@@ -1,4 +1,7 @@
 <?php
+
+use yii\filters\AccessControl;
+
 $params = array_merge(
     require __DIR__ . '/../../common/config/params.php',
     require __DIR__ . '/../../common/config/params-local.php',
@@ -14,28 +17,21 @@ return [
         'log',
         'common\bootstrap\SetUp'
     ],
+    'language' => 'ru-RU',
+    'timeZone' => 'Europe/Moscow',
     'modules' => [],
     'components' => [
         'request' => [
             'csrfParam' => '_csrf-backend',
-            'cookieValidationKey' => $params['cookieValidationKey'],
         ],
         'user' => [
             'identityClass' => 'apple\entities\User',
             'enableAutoLogin' => true,
-            'identityCookie' => [
-                'name' => '_identity',
-                'httpOnly' => true,
-                'domain' => $params['cookieDomain'],
-            ],
-            'loginUrl' => ['auth/login'],
+            'identityCookie' => ['name' => '_identity-backend', 'httpOnly' => true],
         ],
         'session' => [
-            'name' => '_session',
-            'cookieParams' => [
-                'domain' => $params['cookieDomain'],
-                'httpOnly' => true,
-            ],
+            // this is the name of the session cookie used for login on the backend
+            'name' => 'advanced-backend',
         ],
         'log' => [
             'traceLevel' => YII_DEBUG ? 3 : 0,
@@ -51,13 +47,14 @@ return [
         ],
         'backendUrlManager' => require __DIR__ . '/urlManager.php',
         'frontendUrlManager' => require __DIR__ . '/../../frontend/config/urlManager.php',
-        'urlManager' => function () {
+        'urlManager' => function() {
             return Yii::$app->get('backendUrlManager');
-        },
+        }
+
     ],
     'as access' => [
         'class' => 'yii\filters\AccessControl',
-        'except' => ['auth/login', 'site/error'],
+        'except' => ['site/login', 'site/error'],
         'rules' => [
             [
                 'allow' => true,

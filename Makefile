@@ -1,7 +1,7 @@
 up: docker-up
 down: docker-down
 restart: docker-down docker-up
-init: docker-down docker-pull docker-build docker-up composer-install migrations
+init: docker-down docker-pull docker-build docker-up composer-install
 
 
 docker-up:
@@ -14,7 +14,7 @@ docker-build:
 	docker-compose build
 
 composer-install:
-	docker-compose run --rm php-cli composer install
+	docker-compose run --rm php-fpm composer install
 
 migrations:
-	docker-compose run --rm php-cli ./yii migrate
+	docker-compose run --rm php-fpm ./yii migrate

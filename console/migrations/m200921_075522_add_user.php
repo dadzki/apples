@@ -13,10 +13,10 @@ class m200921_075522_add_user extends Migration
     public function safeUp()
     {
         $this->insert('user', [
-            'username' => 'user1',
+            'username' => 'user',
             'auth_key' => 'bJIczzEESO9AA7fOfw_3Xvk_97UttSEr',
             'password_hash' => '$2y$13$I1tUsv2GIiFKL.Vk06rrSOWGtEI1.tMb8KXe4yfx4K5GRuW1S/GpC',
-            'email' => 'user1@user.ru',
+            'email' => 'user@user.ru',
             'status' => 10,
             'created_at' => time(),
             'updated_at' => time(),
@@ -28,6 +28,6 @@ class m200921_075522_add_user extends Migration
      */
     public function safeDown()
     {
-        $this->delete('user', ['username' => 'user1']);
+        $this->delete('user', ['username' => 'user']);
     }
 }
