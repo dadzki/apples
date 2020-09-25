@@ -32,7 +32,7 @@
                 'items' => [
                     ['label' => 'Management', 'options' => ['class' => 'header']],
                     ['label' => 'Задание', 'icon' => 'folder', 'items' => [
-                        ['label' => 'Яблони', 'icon' => 'file-o', 'url' => ['/'], 'active' => $this->context->id == ''],
+                        ['label' => 'Яблони', 'icon' => 'file-o', 'url' => ['/tree/index'], 'active' => $this->context->id == ''],
                     ]],
 
                     ['label' => 'Пользователи', 'icon' => 'user', 'url' => ['/user/index'], 'active' => $this->context->id == 'user/index'],

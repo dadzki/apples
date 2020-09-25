@@ -4,6 +4,7 @@ namespace apple\services;
 
 use apple\entities\Tree;
 use apple\repositories\TreeRepository;
+use backend\forms\TreeForm;
 
 
 class TreeService
@@ -16,11 +17,11 @@ class TreeService
         $this->repository = $repository;
     }
 
-    public function create($number, $description): Tree
+    public function create(TreeForm $form): Tree
     {
         $tree = Tree::create(
-            $number,
-            $description
+            $form->number,
+            $form->description
         );
 
         $tree->save();
@@ -28,12 +29,12 @@ class TreeService
         return $tree;
     }
 
-    public function edit($id, $number, $description): Tree
+    public function edit($id, TreeForm $form): Tree
     {
         $tree = $this->repository->get($id);
 
-        $tree->number = $number;
-        $tree->description = $description;
+        $tree->number = $form->number;
+        $tree->description = $form->description;
 
         $this->repository->save($tree);
 

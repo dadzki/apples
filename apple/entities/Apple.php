@@ -20,6 +20,13 @@ class Apple extends ActiveRecord
 {
     const STATE_TREE = 'On the tree';
     const STATE_GROUND = 'On the ground';
+    const STATE_ROTTEN = 'Rotten';
+
+    private $stateTitle = [
+        self::STATE_TREE => 'Висит на дереве',
+        self::STATE_GROUND => 'Лежит на земле',
+        self::STATE_ROTTEN => 'Гнилое яблоко',
+    ];
 
     /**
      * {@inheritdoc}
@@ -61,7 +68,7 @@ class Apple extends ActiveRecord
         if ($this->onGround()) {
             throw new \DomainException('Яблоко уже упало.');
         }
-        $this->felled_date = time();
+        $this->fall_date = time();
         $this->status = self::STATE_GROUND;
 
         return $this;
@@ -100,7 +107,7 @@ class Apple extends ActiveRecord
     /**
      * @return bool
      */
-    public function wasEaten(): bool
+    public function wasEatenFull(): bool
     {
         return $this->size <= 0;
     }
@@ -110,8 +117,16 @@ class Apple extends ActiveRecord
      */
     public function isRotten(): bool
     {
-        return time() - $this->fall_date >= 3600 * 5;
+        return $this->fall_date ? time() - $this->fall_date >= 3600 * 5 : false;
     }
 
+    public function getState()
+    {
+        return $this->isRotten() ? self::STATE_ROTTEN : $this->status;
+    }
 
+    public function getSizePercent()
+    {
+        return floor($this->size * 100);
+    }
 }

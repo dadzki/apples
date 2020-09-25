@@ -22,7 +22,7 @@ class Color
      */
     public function __construct(string $color = null)
     {
-        $this->value = $color ?? array_rand($this->colors);
+        $this->value = $color ?? $this->colors[array_rand($this->colors)];
     }
 
     public function getValue()

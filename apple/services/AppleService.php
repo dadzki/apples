@@ -6,6 +6,7 @@ use apple\entities\Apple;
 use apple\entities\Color;
 use apple\repositories\AppleRepository;
 use apple\repositories\TreeRepository;
+use backend\forms\AppleEatForm;
 
 
 class AppleService
@@ -44,13 +45,15 @@ class AppleService
         return $apple;
     }
 
-    public function eat(int $id, int $persent): Apple
+    public function eat(AppleEatForm $form): Apple
     {
-        $apple = $this->repository->getById($id);
-        $apple->eat($persent);
-
-        $this->repository->save($apple);
-
+        $apple = $this->repository->getById($form->appleId);
+        $apple->eat($form->percent);
+        if ($apple->wasEatenFull()) {
+            $this->repository->remove($apple);
+        } else {
+            $this->repository->save($apple);
+        }
         return $apple;
     }
 
