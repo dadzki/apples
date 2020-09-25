@@ -20,4 +20,4 @@ migrations:
 	docker-compose run --rm php-fpm ./yii migrate
 
 yii-init:
-    docker-compose run --rm php-fpm php ./init
+	docker-compose run --rm php-fpm php ./init
